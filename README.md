@@ -27,7 +27,10 @@ All data flows through JSON endpoints in `api/`, protected by sessions + CSRF to
 
 ## Install
 
-1. Upload everything to your webroot (or a subfolder)
+> **Automatic deployment:** pushes to `main` auto-upload to Hostinger via
+> GitHub Actions — see [DEPLOYMENT.md](DEPLOYMENT.md) for the one-time setup.
+
+1. Upload everything to your webroot (or a subfolder) — or let the deploy workflow do it
 2. Open `config.php` in the browser → enter MySQL credentials
 3. Import `sql/maxxhits-schema.sql` in phpMyAdmin
 4. Open `setadmin.php` → set the admin password → **delete this file from the server**
