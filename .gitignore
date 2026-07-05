@@ -1,0 +1,8 @@
+# Generated at setup time — contains DB credentials + APP_KEY
+db.config.php
+maxxhits.db.config.php
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log
