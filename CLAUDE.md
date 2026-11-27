@@ -1,7 +1,7 @@
 # MaxxHits — Claude Code Project Brief
 
 ## What This Is
-A multi-company content tracking + **automated posting** app for AimBlue Media, built in PHP + MySQL. Successor to the single-file "Content Board" project, rebuilt as a **multi-page app**: every navigation item is its own PHP page with its own JS file, so editing one page never breaks the others.
+A multi-company **marketing operating system** for AimBlue Media: content tracking, AI content generation, human approval workflow, and automated posting to WordPress + social media. Built in PHP + MySQL as a **multi-page app**: every navigation item is its own PHP page with its own JS file, so editing one page never breaks the others. Direction: evolving toward the full "GrokBot 2.0" marketing OS spec (agents, listening, outreach, analytics) phase by phase.
 
 ## Stack
 - **Backend**: PHP 8.x, PDO/MySQL — no frameworks, no Composer, no build step
@@ -14,8 +14,10 @@ A multi-company content tracking + **automated posting** app for AimBlue Media, 
 index.php               — Redirects to dashboard.php (or login.php)
 login.php / logout.php  — Auth
 dashboard.php           — Stats, posting today, company summary, team earnings
-companies.php           — Companies overview + admin CRUD
+companies.php           — Companies overview + admin CRUD (incl. website_url + brand_voice for AI)
 company.php?id=X        — Per-company content board (posts, month filter, post editor)
+content-studio.php      — AI Content Studio: brief → Claude/Grok draft variants → edit → submit for review
+approvals.php           — Approval Center: review queue, approve / approve+queue / reject (admin decides)
 content-managers.php    — CM list (shares includes/people-page.php)
 sales-people.php        — SP list (shares includes/people-page.php)
 social-logins.php       — Encrypted credentials vault
@@ -37,11 +39,13 @@ includes/
 api/                    — One endpoint file per domain; all JSON; all behind auth+CSRF
   _init.php             — Shared API bootstrap ($pdo, $method, $body)
   companies.php, posts.php, people.php, users.php,
-  social-logins.php, dashboard.php, automation.php
+  social-logins.php, dashboard.php, automation.php, ai.php
 
 assets/js/              — core.js (MH namespace) + one file per page
 assets/css/app.css      — All styles
 
+lib/ai.php              — AI generation: Claude API (default, claude-opus-5-5, raw cURL —
+                          no Composer on shared hosting) + xAI Grok; keys AES-encrypted in settings
 lib/publishers/         — Automated posting modules
   publisher.php         — Dispatcher + publisher_http() cURL helper
   wordpress.php         — WP REST API + application passwords (+ image sideload)
@@ -52,6 +56,7 @@ lib/publishers/         — Automated posting modules
 
 cron/publish-scheduler.php — Publishes due auto-posts; CLI or HTTP+?key=CRON_KEY
 sql/maxxhits-schema.sql    — Full schema + views + default admin (locked password)
+sql/migration-content-pipeline.sql — Upgrade for pre-pipeline installs
 ```
 
 ## Architecture Decisions
@@ -62,6 +67,8 @@ sql/maxxhits-schema.sql    — Full schema + views + default admin (locked passw
 5. **DB config lives above webroot** when writable: `../maxxhits.db.config.php`, falling back to `./db.config.php` (both gitignored, both blocked by .htaccess).
 6. **Dual roles**: `users.role` is comma-separated (`content_manager,sales_person`); `cm_person_id`/`sp_person_id` link each role to a `people` record.
 7. **Automation**: `channels` hold per-company platform credentials (encrypted JSON). Posts with `publish_mode='auto'` + a channel are picked up by `cron/publish-scheduler.php` when `post_date`/`publish_time` are due. Results land on the post row (`status`, `external_id`, `post_url`, `publish_error`) and in `automation_logs`. The claim UPDATE (`status → publishing`) prevents double-publish from overlapping cron runs.
+8. **Content pipeline / approval workflow**: post statuses are `draft → review → approved → scheduled → publishing → published` (+ `failed`, `rejected`). Rules enforced server-side in `api/posts.php`: only admins approve/reject (`action=approve|reject`); rejecting requires a note; **auto-publish posts cannot be scheduled without approval** (admin queueing counts as approval); a non-admin edit to an approved/scheduled post clears the approval and sends it back to review. `approved`/`rejected` are never accepted via `action=save`.
+9. **AI generation** (`lib/ai.php`): provider + model + encrypted API keys live in `settings` (`ai_provider`, `ai_model`, `ai_key_*_enc`). Claude is the default provider (`claude-opus-5-5`, Messages API over raw cURL with the server-side refusal fallback beta); Grok uses OpenAI-compatible chat completions. Prompts include the company's `brand_voice`/`website_url`; the model returns a JSON array of `{title, content}` variants with a plain-text fallback parser. AI never publishes — generated posts enter the pipeline as draft/review with `ai_generated=1`.
 
 ## Database Schema (key tables)
 ```
@@ -84,6 +91,9 @@ settings         — setting_key, setting_value  (cron_key lives here)
 | All companies | ✓ | Own only | Own only |
 | Add/Edit/Delete company | ✓ | ✗ | ✗ |
 | Add/Edit posts | ✓ | ✓ (own companies) | ✗ |
+| Content Studio (AI generate) | ✓ | ✓ (own companies) | ✗ (no page) |
+| Approve / reject posts | ✓ | ✗ (view queue) | ✗ (view queue) |
+| AI settings (provider/keys) | ✓ | ✗ | ✗ |
 | Publish now | ✓ | ✓ (own companies) | ✗ |
 | Channels add/edit/test | ✓ | ✗ (view only) | ✗ (view only) |
 | Users page | ✓ | ✗ | ✗ |

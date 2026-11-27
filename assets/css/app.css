@@ -139,6 +139,9 @@ body {
 /* ── Status + platform badges ────────────────────────────── */
 .badge-status { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; display: inline-block; }
 .st-draft      { background: #f1f5f9; color: #475569; }
+.st-review     { background: #fef9c3; color: #a16207; }
+.st-approved   { background: #d1fae5; color: #047857; }
+.st-rejected   { background: #fee2e2; color: #991b1b; }
 .st-scheduled  { background: #fef3c7; color: #b45309; }
 .st-publishing { background: #dbeafe; color: #1d4ed8; }
 .st-published  { background: #dcfce7; color: #15803d; }

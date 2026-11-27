@@ -183,7 +183,7 @@
     document.getElementById('pTitle').value = p ? p.title : '';
     document.getElementById('pContent').value = p ? (p.content || '') : '';
     document.getElementById('pPlatform').value = p ? p.platform : 'blog';
-    document.getElementById('pStatus').value = p && ['draft', 'scheduled', 'published'].indexOf(p.status) !== -1 ? p.status : 'scheduled';
+    document.getElementById('pStatus').value = p && ['draft', 'review', 'scheduled', 'published'].indexOf(p.status) !== -1 ? p.status : 'scheduled';
     document.getElementById('pAssignee').value = p ? (p.assignee || '') : (company && company.content_manager_name) || '';
     document.getElementById('pDate').value = p ? (p.post_date || '') : '';
     document.getElementById('pTime').value = p && p.publish_time ? p.publish_time.slice(0, 5) : '';

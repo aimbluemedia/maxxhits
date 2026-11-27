@@ -94,18 +94,22 @@ try {
             $days   = !empty($body['posting_days']) && is_array($body['posting_days'])
                         ? implode(',', array_intersect($body['posting_days'], ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']))
                         : null;
+            $webUrl = trim($body['website_url'] ?? '') ?: null;
+            $voice  = trim($body['brand_voice'] ?? '') ?: null;
 
             if (!$name) json_error('Company name is required.', 422);
             if (!valid_hex_color($color)) $color = '#6c47ff';
             if ($payDay !== null && ($payDay < 1 || $payDay > 31)) json_error('Payment date must be 1–31.', 422);
+            if ($webUrl !== null && !preg_match('~^https?://~i', $webUrl)) json_error('Website URL must start with http:// or https://', 422);
 
             $stmt = $pdo->prepare("
                 INSERT INTO companies
-                  (id, name, color, content_manager_id, sales_person_id, monthly_posts,
+                  (id, name, color, website_url, brand_voice, content_manager_id, sales_person_id, monthly_posts,
                    fee, fee_sp_pct, fee_cm_pct, fee_sm_pct, payment_date, posting_days)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON DUPLICATE KEY UPDATE
                   name=VALUES(name), color=VALUES(color),
+                  website_url=VALUES(website_url), brand_voice=VALUES(brand_voice),
                   content_manager_id=VALUES(content_manager_id),
                   sales_person_id=VALUES(sales_person_id),
                   monthly_posts=VALUES(monthly_posts), fee=VALUES(fee),
@@ -113,7 +117,7 @@ try {
                   fee_sm_pct=VALUES(fee_sm_pct), payment_date=VALUES(payment_date),
                   posting_days=VALUES(posting_days)
             ");
-            $stmt->execute([$id, $name, $color, $cmId, $spId, $posts, $fee, $spPct, $cmPct, $smPct, $payDay, $days]);
+            $stmt->execute([$id, $name, $color, $webUrl, $voice, $cmId, $spId, $posts, $fee, $spPct, $cmPct, $smPct, $payDay, $days]);
             json_ok(['id' => $id]);
             break;
 

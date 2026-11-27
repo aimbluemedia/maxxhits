@@ -50,6 +50,14 @@ include __DIR__ . '/includes/layout/header.php';
             <label class="form-label">Sales person</label>
             <select class="form-select" id="coSP"><option value="">—</option></select>
           </div>
+          <div class="col-12">
+            <label class="form-label">Website URL</label>
+            <input class="form-control" id="coWebsite" placeholder="https://example.com">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Brand voice <span class="text-muted fw-normal">(used by AI content generation)</span></label>
+            <textarea class="form-control" id="coVoice" rows="2" placeholder="Tone, audience, do's and don'ts for this brand…"></textarea>
+          </div>
           <div class="col-4">
             <label class="form-label">Posts / month</label>
             <input type="number" class="form-control" id="coPosts" min="0">

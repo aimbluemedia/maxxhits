@@ -19,15 +19,18 @@ $mh_connected = db_connected();
 $mh_role_badge = $mh_is_admin ? 'Admin' : (has_role('content_manager') ? 'CM' : 'SP');
 $mh_role_color = $mh_is_admin ? '#6c47ff' : (has_role('content_manager') ? '#0891b2' : '#16a34a');
 
-// Sidebar navigation. Each entry: id, href, icon, label, iconColor, adminOnly
+// Sidebar navigation. Each entry: id, href, icon, label, iconColor, show
+$mh_can_create = $mh_is_admin || has_role('content_manager');
 $mh_nav = [
-    ['id' => 'dashboard',        'href' => 'dashboard.php',        'icon' => 'bi-speedometer2',  'label' => 'Dashboard',        'color' => '#6c47ff', 'admin' => false],
-    ['id' => 'companies',        'href' => 'companies.php',        'icon' => 'bi-building',      'label' => 'Companies',        'color' => '#f97316', 'admin' => false],
-    ['id' => 'automation',       'href' => 'automation.php',       'icon' => 'bi-robot',         'label' => 'Automation',       'color' => '#e11d48', 'admin' => false],
-    ['id' => 'social-logins',    'href' => 'social-logins.php',    'icon' => 'bi-key',           'label' => 'Social Logins',    'color' => '#ec4899', 'admin' => false],
-    ['id' => 'content-managers', 'href' => 'content-managers.php', 'icon' => 'bi-person-badge',  'label' => 'Content Managers', 'color' => '#0891b2', 'admin' => false],
-    ['id' => 'sales-people',     'href' => 'sales-people.php',     'icon' => 'bi-person-check',  'label' => 'Sales People',     'color' => '#16a34a', 'admin' => false],
-    ['id' => 'users',            'href' => 'users.php',            'icon' => 'bi-people',        'label' => 'Users',            'color' => '#f59e0b', 'admin' => true],
+    ['id' => 'dashboard',        'href' => 'dashboard.php',        'icon' => 'bi-speedometer2',    'label' => 'Dashboard',        'color' => '#6c47ff', 'show' => true],
+    ['id' => 'companies',        'href' => 'companies.php',        'icon' => 'bi-building',        'label' => 'Companies',        'color' => '#f97316', 'show' => true],
+    ['id' => 'content-studio',   'href' => 'content-studio.php',   'icon' => 'bi-stars',           'label' => 'Content Studio',   'color' => '#a855f7', 'show' => $mh_can_create],
+    ['id' => 'approvals',        'href' => 'approvals.php',        'icon' => 'bi-clipboard-check', 'label' => 'Approvals',        'color' => '#22c55e', 'show' => true],
+    ['id' => 'automation',       'href' => 'automation.php',       'icon' => 'bi-robot',           'label' => 'Automation',       'color' => '#e11d48', 'show' => true],
+    ['id' => 'social-logins',    'href' => 'social-logins.php',    'icon' => 'bi-key',             'label' => 'Social Logins',    'color' => '#ec4899', 'show' => true],
+    ['id' => 'content-managers', 'href' => 'content-managers.php', 'icon' => 'bi-person-badge',    'label' => 'Content Managers', 'color' => '#0891b2', 'show' => true],
+    ['id' => 'sales-people',     'href' => 'sales-people.php',     'icon' => 'bi-person-check',    'label' => 'Sales People',     'color' => '#16a34a', 'show' => true],
+    ['id' => 'users',            'href' => 'users.php',            'icon' => 'bi-people',          'label' => 'Users',            'color' => '#f59e0b', 'show' => $mh_is_admin],
 ];
 ?>
 <!DOCTYPE html>
@@ -56,7 +59,7 @@ $mh_nav = [
 
     <nav class="sb-nav">
       <?php foreach ($mh_nav as $item): ?>
-        <?php if ($item['admin'] && !$mh_is_admin) continue; ?>
+        <?php if (!$item['show']) continue; ?>
         <a class="sb-link<?= $item['id'] === $PAGE['id'] ? ' active' : '' ?>" href="<?= e($item['href']) ?>">
           <i class="bi <?= e($item['icon']) ?>" style="color:<?= e($item['color']) ?>"></i>
           <span class="hide-collapsed"><?= e($item['label']) ?></span>

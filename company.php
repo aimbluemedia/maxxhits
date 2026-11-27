@@ -100,6 +100,7 @@ include __DIR__ . '/includes/layout/header.php';
             <label class="form-label">Status</label>
             <select class="form-select" id="pStatus">
               <option value="draft">Draft</option>
+              <option value="review">Submit for review</option>
               <option value="scheduled" selected>Scheduled</option>
               <option value="published">Published</option>
             </select>

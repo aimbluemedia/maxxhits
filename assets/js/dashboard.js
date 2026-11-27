@@ -17,9 +17,28 @@
     const rev = document.getElementById('dsRevenue');
     if (rev && d.revenue) rev.textContent = MH.money(d.revenue.total_monthly_revenue);
     document.getElementById('dsCompanies').textContent = d.summary.length;
+    document.getElementById('dsReview').textContent = d.automation.in_review;
     document.getElementById('dsQueued').textContent = d.automation.queued;
     document.getElementById('dsPublishedToday').textContent = d.automation.published_today;
     document.getElementById('dsFailed').textContent = d.automation.failed;
+
+    // Pipeline strip: Draft → Review → Approved → Queued → Published today
+    const pipe = document.getElementById('dashPipeline');
+    if (pipe) {
+      const stages = [
+        ['Drafts', d.automation.drafts, 'st-draft', 'content-studio.php'],
+        ['In review', d.automation.in_review, 'st-review', 'approvals.php'],
+        ['Approved', d.automation.approved, 'st-approved', 'approvals.php'],
+        ['Auto queue', d.automation.queued, 'st-scheduled', 'automation.php'],
+        ['Published today', d.automation.published_today, 'st-published', 'automation.php'],
+        ['Failed', d.automation.failed, 'st-failed', 'automation.php']
+      ];
+      pipe.innerHTML = stages.map(function (s, i) {
+        return (i ? '<span style="color:#cbd5e1;align-self:center">→</span>' : '') +
+          '<a href="' + s[3] + '" style="text-decoration:none" class="badge-status ' + s[2] + '">' +
+          s[0] + ': <strong>' + s[1] + '</strong></a>';
+      }).join('');
+    }
 
     renderToday(d.today);
     renderSummary(d.summary);

@@ -1,12 +1,17 @@
 # MaxxHits
 
-Multi-company content tracking and **automated posting** platform by AimBlue Media.
+Multi-company **marketing operating system** by AimBlue Media: content tracking, AI content
+generation, human approval workflow, and automated posting to WordPress + social media.
 Plain PHP 8 + MySQL + vanilla JS — no frameworks, no build step, runs on shared hosting (Hostinger/cPanel).
 
 ## What it does
 
-- **Dashboard** — monthly revenue, companies posting today, per-company progress, team earnings
-- **Companies** — client companies with fees, fee splits, posting targets and posting days
+- **Dashboard** — revenue, posting today, content pipeline (draft → review → approved → queued → published)
+- **Content Studio** — AI-written draft variants per brand + platform (Claude or Grok), using each
+  company's saved brand voice; drafts go to review, never straight to publishing
+- **Approval Center** — admins approve, approve-and-queue, or reject with a note; edits to an
+  approved post automatically send it back to review
+- **Companies** — client brands with fees, fee splits, posting targets, brand voice and website
 - **Company board** — per-company post calendar with month filter, platform filter and post editor
 - **Automation** — connect WordPress + social accounts as *channels* and auto-publish scheduled posts:
   - WordPress (REST API + application passwords, incl. featured-image sideload)
@@ -35,6 +40,14 @@ All data flows through JSON endpoints in `api/`, protected by sessions + CSRF to
 3. Import `sql/maxxhits-schema.sql` in phpMyAdmin
 4. Open `setadmin.php` → set the admin password → **delete this file from the server**
 5. Sign in at `login.php` (username `admin`)
+
+## AI content setup
+
+1. **Content Studio** (admin) → *AI settings* → pick Claude (default, model `claude-opus-5-5`)
+   or Grok, paste the provider's API key (stored encrypted)
+2. Give each company a **brand voice** (Companies → edit) so drafts match the client's tone
+3. Generate variants in Content Studio → edit → *Submit for review* → approve in the
+   **Approval Center** → queued posts publish automatically via the cron
 
 ## Automated posting setup
 

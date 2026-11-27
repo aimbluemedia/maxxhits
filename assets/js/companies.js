@@ -99,6 +99,8 @@
     document.getElementById('coColor').value = co ? co.color : '#6c47ff';
     document.getElementById('coCM').value = co ? (co.content_manager_id || '') : '';
     document.getElementById('coSP').value = co ? (co.sales_person_id || '') : '';
+    document.getElementById('coWebsite').value = co ? (co.website_url || '') : '';
+    document.getElementById('coVoice').value = co ? (co.brand_voice || '') : '';
     document.getElementById('coPosts').value = co && co.monthly_posts != null ? co.monthly_posts : '';
     document.getElementById('coFee').value = co && co.fee != null ? co.fee : '';
     document.getElementById('coPayDay').value = co && co.payment_date != null ? co.payment_date : '';
@@ -121,6 +123,8 @@
       color: document.getElementById('coColor').value,
       content_manager_id: document.getElementById('coCM').value || null,
       sales_person_id: document.getElementById('coSP').value || null,
+      website_url: document.getElementById('coWebsite').value.trim(),
+      brand_voice: document.getElementById('coVoice').value.trim(),
       monthly_posts: document.getElementById('coPosts').value,
       fee: document.getElementById('coFee').value,
       payment_date: document.getElementById('coPayDay').value,

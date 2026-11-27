@@ -42,12 +42,12 @@ try {
         $team    = $pdo->query('SELECT * FROM v_team_earnings ORDER BY total_monthly_earnings DESC')->fetchAll();
     }
 
-    // Automation snapshot: queue counts + recent failures
+    // Automation + pipeline snapshot
     $autoWhere  = '';
     $autoParams = [];
     if ($filter !== null) {
         if (empty($filter)) {
-            $automation = ['queued' => 0, 'published_today' => 0, 'failed' => 0];
+            $automation = ['drafts' => 0, 'in_review' => 0, 'approved' => 0, 'queued' => 0, 'published_today' => 0, 'failed' => 0];
             json_ok(compact('summary', 'revenue', 'today', 'team', 'automation'));
         }
         $autoWhere  = ' AND company_id IN (' . implode(',', array_fill(0, count($filter), '?')) . ')';
@@ -55,14 +55,19 @@ try {
     }
     $stmt = $pdo->prepare("
         SELECT
+          SUM(status='draft')                                                      AS drafts,
+          SUM(status='review')                                                     AS in_review,
+          SUM(status='approved')                                                   AS approved,
           SUM(publish_mode='auto' AND status='scheduled')                          AS queued,
           SUM(status='published' AND DATE(published_at) = CURDATE())               AS published_today,
           SUM(status='failed')                                                     AS failed
         FROM posts WHERE 1=1 $autoWhere
     ");
     $stmt->execute($autoParams);
-    $automation = $stmt->fetch() ?: ['queued' => 0, 'published_today' => 0, 'failed' => 0];
-    foreach ($automation as $k => $v) $automation[$k] = (int)$v;
+    $automation = $stmt->fetch() ?: [];
+    foreach (['drafts', 'in_review', 'approved', 'queued', 'published_today', 'failed'] as $k) {
+        $automation[$k] = (int)($automation[$k] ?? 0);
+    }
 
     json_ok(compact('summary', 'revenue', 'today', 'team', 'automation'));
 

@@ -45,6 +45,8 @@ CREATE TABLE companies (
   id                  VARCHAR(36)      NOT NULL,
   name                VARCHAR(255)     NOT NULL,
   color               VARCHAR(7)       NOT NULL DEFAULT '#6c47ff',
+  website_url         VARCHAR(500)     DEFAULT NULL,
+  brand_voice         TEXT             DEFAULT NULL COMMENT 'Tone/style instructions fed to AI content generation',
   content_manager_id  VARCHAR(36)      DEFAULT NULL,
   sales_person_id     VARCHAR(36)      DEFAULT NULL,
   monthly_posts       INT UNSIGNED     DEFAULT NULL,
@@ -115,7 +117,7 @@ CREATE TABLE posts (
   content          MEDIUMTEXT   DEFAULT NULL COMMENT 'Post body used by auto-publishing',
   image_url        TEXT         DEFAULT NULL COMMENT 'Public image URL (required for Instagram)',
   platform         ENUM('blog','facebook','instagram','twitter','linkedin','tiktok','youtube','reddit','pinterest') NOT NULL,
-  status           ENUM('draft','scheduled','publishing','published','failed') NOT NULL DEFAULT 'scheduled',
+  status           ENUM('draft','review','approved','scheduled','publishing','published','failed','rejected') NOT NULL DEFAULT 'draft',
   post_date        DATE         DEFAULT NULL,
   publish_time     TIME         DEFAULT NULL COMMENT 'Time of day for auto-publish (NULL = any time)',
   publish_mode     ENUM('manual','auto') NOT NULL DEFAULT 'manual',
@@ -126,6 +128,10 @@ CREATE TABLE posts (
   published_at     DATETIME     DEFAULT NULL,
   publish_error    TEXT         DEFAULT NULL,
   publish_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  approved_by      VARCHAR(255) DEFAULT NULL,
+  approved_at      DATETIME     DEFAULT NULL,
+  review_note      TEXT         DEFAULT NULL,
+  ai_generated     TINYINT(1)   NOT NULL DEFAULT 0,
   created_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -338,7 +344,9 @@ INSERT INTO settings (setting_key, setting_value) VALUES
   ('default_fee_sp', '40'),
   ('default_fee_cm', '40'),
   ('default_fee_sm', '20'),
-  ('cron_key',       NULL)
+  ('cron_key',       NULL),
+  ('ai_provider',    'anthropic'),
+  ('ai_model',       'claude-opus-5-5')
 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
 
 -- ============================================================
