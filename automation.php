@@ -1,107 +1,114 @@
 <?php
 // ============================================================
-//  automation.php — Automated posting hub
-//  Publishing channels (WordPress + social), the auto-publish
-//  queue, activity logs and the cron setup info.
+//  automation.php?p=<platform> — Platform automation workspace
+//  One dedicated page serving all ten Automation nav items.
+//  Configure recurring AI research + draft creation; test runs
+//  create drafts in the Approval center, never publish.
 // ============================================================
 
 require_once __DIR__ . '/includes/bootstrap.php';
 require_login();
 
-$PAGE = [
-    'id'    => 'automation',
-    'title' => 'Automation',
-    'js'    => ['automation.js'],
-];
+$platform  = $_GET['p'] ?? 'wordpress';
+$platforms = mh_platforms();
+if (!isset($platforms[$platform])) { header('Location: dashboard.php'); exit; }
 
+$pcfg  = $platforms[$platform];
+$slug  = '';
+foreach (mh_automation_pages() as $s => $cfg) {
+    if ($cfg['platform'] === $platform) { $slug = $s; break; }
+}
+
+$PAGE = ['id' => $slug, 'title' => $pcfg['label'] . ' Automation', 'js' => ['automation.js']];
 include __DIR__ . '/includes/layout/header.php';
 ?>
 
-<div id="automationPage" data-is-admin="<?= $mh_is_admin ? '1' : '0' ?>">
-
-  <?php if ($mh_is_admin): ?>
-  <div class="mh-card" style="background:#f5f3ff;border-color:#ddd6fe">
-    <h3><i class="bi bi-clock-history"></i>Scheduler (cron)</h3>
-    <div style="font-size:13px;color:#475569">
-      Auto-publish runs when the cron URL below is called. Add it to your hosting panel
-      (Hostinger: Advanced → Cron Jobs) or an external cron service, every 5–15 minutes.
-      <div class="input-group input-group-sm mt-2" style="max-width:720px">
-        <input class="form-control" id="cronUrl" readonly value="Loading…" style="font-size:12px">
-        <button class="btn btn-outline-secondary" id="btnCopyCron" type="button"><i class="bi bi-clipboard"></i> Copy</button>
-        <button class="btn btn-mh" id="btnRunDue" type="button"><i class="bi bi-play-fill"></i> Run now</button>
-      </div>
-      <div class="form-text">CLI alternative: <code>php cron/publish-scheduler.php</code></div>
-    </div>
+<div class="page-head" id="automationPage"
+     data-platform="<?= e($platform) ?>"
+     data-has-adapter="<?= $pcfg['adapter'] ? '1' : '0' ?>"
+     data-is-admin="<?= $mh_is_admin ? '1' : '0' ?>">
+  <div>
+    <small>Automation</small>
+    <h1><?= e($pcfg['label']) ?> automation</h1>
+    <p class="muted">Recurring AI research and draft creation on a brand-specific schedule (Arizona time).
+      Every run creates drafts for the Approval center — nothing publishes without approval.</p>
   </div>
-  <?php endif; ?>
-
-  <div class="mh-card">
-    <h3>
-      <i class="bi bi-broadcast"></i>Publishing channels
-      <span class="ms-auto"></span>
-    </h3>
-    <div id="channelsList"><div class="text-muted" style="font-size:13px">Loading…</div></div>
-  </div>
-
-  <div class="mh-card">
-    <h3><i class="bi bi-robot"></i>Auto-publish queue</h3>
-    <div id="queueList"><div class="text-muted" style="font-size:13px">Loading…</div></div>
-  </div>
-
-  <div class="mh-card">
-    <h3><i class="bi bi-journal-text"></i>Activity log</h3>
-    <div id="logsList"><div class="text-muted" style="font-size:13px">Loading…</div></div>
-  </div>
+  <button class="primary" id="btnAddAuto" type="button">New automation</button>
 </div>
 
-<?php if ($mh_is_admin): ?>
-<!-- Modal: add / edit channel -->
-<div class="modal fade" id="mChannel" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="mChannelTitle"><i class="bi bi-broadcast me-2"></i>Add channel</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="chId">
-        <div class="row g-3">
-          <div class="col-6">
-            <label class="form-label">Company *</label>
-            <select class="form-select" id="chCompany"></select>
-          </div>
-          <div class="col-6">
-            <label class="form-label">Platform *</label>
-            <select class="form-select" id="chPlatform">
-              <option value="wordpress">WordPress</option>
-              <option value="facebook">Facebook Page</option>
-              <option value="instagram">Instagram Business</option>
-              <option value="twitter">X / Twitter</option>
-              <option value="linkedin">LinkedIn</option>
-            </select>
-          </div>
-          <div class="col-12">
-            <label class="form-label">Channel name *</label>
-            <input class="form-control" id="chName" maxlength="255" placeholder="e.g. Acme blog">
-          </div>
-          <div class="col-12" id="chConfigFields">
-            <!-- per-platform credential fields injected by automation.js -->
-          </div>
-          <div class="col-12">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="chActive" checked>
-              <label class="form-check-label" for="chActive" style="font-size:13px">Channel active</label>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-sm btn-mh" id="btnSaveChannel">Save channel</button>
-      </div>
-    </div>
-  </div>
+<?php if (!$pcfg['adapter']): ?>
+<div class="banner">
+  <?= e($pcfg['label']) ?> has no publishing adapter yet — approved drafts are
+  <strong>manual handoff</strong>: staff copies the approved content into the platform natively.
 </div>
 <?php endif; ?>
+
+<div class="grid" id="autoTiles">
+  <div class="panel"><small>Configured</small><div class="num" id="atConfigured">—</div></div>
+  <div class="panel"><small>Enabled</small><div class="num ok" id="atEnabled">—</div></div>
+  <div class="panel"><small>Runs recorded</small><div class="num" id="atRuns">—</div></div>
+</div>
+
+<div class="panel">
+  <h2>Configurations</h2>
+  <div class="scroll" id="autosList"><span class="muted">Loading…</span></div>
+</div>
+
+<div class="panel">
+  <h2>Run history</h2>
+  <div class="scroll" id="runsList"><span class="muted">Loading…</span></div>
+</div>
+
+<div class="mh-overlay" id="mAuto">
+  <div class="mh-modal">
+    <div class="mh-modal-head"><span id="mAutoTitle">New automation</span><button type="button" data-close>✕</button></div>
+    <div class="mh-modal-body">
+      <input type="hidden" id="aId">
+      <div class="form-grid">
+        <div>
+          <label>Brand *</label>
+          <select id="aBrand" style="width:100%"></select>
+        </div>
+        <div>
+          <label>Automation name *</label>
+          <input id="aName" type="text" style="width:100%" placeholder="Daily <?= e(strtolower($pcfg['label'])) ?> workflow" maxlength="255">
+        </div>
+        <?php if ($pcfg['adapter']): ?>
+        <div class="full">
+          <label>Destination <span class="muted">(where approved drafts publish — manage under Connected accounts)</span></label>
+          <select id="aDestination" style="width:100%"><option value="">— manual handoff (no auto-publish) —</option></select>
+        </div>
+        <?php endif; ?>
+        <div class="full">
+          <label>Content topics, research instructions and audience *</label>
+          <textarea id="aTopic" rows="4" placeholder="What should the AI research and write about for this brand?"></textarea>
+        </div>
+        <div>
+          <label>Frequency</label>
+          <select id="aFrequency" style="width:100%">
+            <option value="daily">Daily</option>
+            <option value="weekdays">Weekdays</option>
+            <option value="weekly">Weekly (Mondays)</option>
+            <option value="monthly">Monthly (1st)</option>
+          </select>
+        </div>
+        <div>
+          <label>Run time (Arizona)</label>
+          <input id="aTime" type="time" value="06:00" style="width:100%">
+        </div>
+        <div>
+          <label>Max drafts per run (1–5)</label>
+          <input id="aMax" type="number" min="1" max="5" value="1" style="width:100%">
+        </div>
+      </div>
+      <p class="hint" style="margin-top:12px">Saving always stores the automation <strong>paused</strong> —
+        review a test run before enabling it.</p>
+    </div>
+    <div class="mh-modal-footer">
+      <button type="button" data-close>Cancel</button>
+      <button type="button" class="primary" id="btnSaveAuto">Save configuration</button>
+    </div>
+  </div>
+</div>
 
 <?php include __DIR__ . '/includes/layout/footer.php'; ?>

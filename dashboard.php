@@ -1,53 +1,51 @@
 <?php
 // ============================================================
-//  dashboard.php — Dashboard page
-//  Revenue totals, automation snapshot, posting today,
-//  company summary and team earnings.
+//  dashboard.php — Overview (Command)
 // ============================================================
 
 require_once __DIR__ . '/includes/bootstrap.php';
 require_login();
 
-$PAGE = [
-    'id'    => 'dashboard',
-    'title' => 'Dashboard',
-    'js'    => ['dashboard.js'],
-];
-
+$PAGE = ['id' => 'overview', 'title' => 'Overview', 'js' => ['dashboard.js']];
 include __DIR__ . '/includes/layout/header.php';
 ?>
 
-<div class="stats" id="dashStats">
-  <?php if ($mh_is_admin): ?>
-  <div class="sc"><div class="sc-lbl"><i class="bi bi-cash-stack me-1"></i>Monthly revenue</div><div class="sc-val" id="dsRevenue">—</div></div>
-  <?php endif; ?>
-  <div class="sc"><div class="sc-lbl"><i class="bi bi-building me-1"></i>Companies</div><div class="sc-val" id="dsCompanies">—</div></div>
-  <div class="sc"><div class="sc-lbl"><i class="bi bi-hourglass-split me-1"></i>In review</div><div class="sc-val" id="dsReview">—</div></div>
-  <div class="sc sch"><div class="sc-lbl"><i class="bi bi-robot me-1"></i>Auto queue</div><div class="sc-val" id="dsQueued">—</div></div>
-  <div class="sc pub"><div class="sc-lbl"><i class="bi bi-check-circle me-1"></i>Published today</div><div class="sc-val" id="dsPublishedToday">—</div></div>
-  <div class="sc err"><div class="sc-lbl"><i class="bi bi-exclamation-circle me-1"></i>Failed posts</div><div class="sc-val" id="dsFailed">—</div></div>
+<div class="page-head">
+  <div>
+    <small>Command</small>
+    <h1>Overview</h1>
+    <p class="muted">Executive view of brand operations and exceptions.</p>
+  </div>
 </div>
 
-<div class="mh-card">
-  <h3><i class="bi bi-diagram-3"></i>Content pipeline</h3>
-  <div id="dashPipeline" class="d-flex gap-2 flex-wrap" style="font-size:13px"><span class="text-muted">Loading…</span></div>
+<div class="grid" id="ovTiles">
+  <div class="panel"><small>In review</small><div class="num warn" id="tReview">—</div></div>
+  <div class="panel"><small>Scheduled</small><div class="num" id="tScheduled">—</div></div>
+  <div class="panel"><small>Published today</small><div class="num ok" id="tToday">—</div></div>
+  <div class="panel"><small>Failed</small><div class="num err" id="tFailed">—</div></div>
+  <div class="panel"><small>Automations enabled</small><div class="num" id="tAutos">—</div></div>
 </div>
 
-<div class="mh-card">
-  <h3><i class="bi bi-calendar-check"></i>Posting today</h3>
-  <div id="dashToday"><div class="text-muted" style="font-size:13px">Loading…</div></div>
+<div class="panel">
+  <h2>Content pipeline</h2>
+  <div class="flow" id="ovPipeline"><span class="muted">Loading…</span></div>
 </div>
 
-<div class="mh-card">
-  <h3><i class="bi bi-building"></i>Companies</h3>
-  <div id="dashSummary"><div class="text-muted" style="font-size:13px">Loading…</div></div>
+<div class="two">
+  <div class="panel">
+    <h2>Brands</h2>
+    <div class="scroll" id="ovBrands"><span class="muted">Loading…</span></div>
+  </div>
+  <div>
+    <div class="panel">
+      <h2>Exceptions · failed posts</h2>
+      <div id="ovFailures"><span class="muted">Loading…</span></div>
+    </div>
+    <div class="panel">
+      <h2>Recent automation runs</h2>
+      <div id="ovRuns"><span class="muted">Loading…</span></div>
+    </div>
+  </div>
 </div>
-
-<?php if ($mh_is_admin): ?>
-<div class="mh-card">
-  <h3><i class="bi bi-cash-coin"></i>Team earnings</h3>
-  <div id="dashTeam"><div class="text-muted" style="font-size:13px">Loading…</div></div>
-</div>
-<?php endif; ?>
 
 <?php include __DIR__ . '/includes/layout/footer.php'; ?>

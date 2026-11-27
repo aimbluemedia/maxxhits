@@ -1,80 +1,66 @@
 <?php
 // ============================================================
-//  users.php — User accounts (admin only)
+//  users.php — Staff accounts (admin only)
 // ============================================================
 
 require_once __DIR__ . '/includes/bootstrap.php';
 require_login();
 require_admin();
 
-$PAGE = [
-    'id'    => 'users',
-    'title' => 'Users',
-    'js'    => ['users.js'],
-];
-
+$PAGE = ['id' => 'users', 'title' => 'Users', 'js' => ['users.js']];
 include __DIR__ . '/includes/layout/header.php';
 ?>
 
-<div id="usersList">
-  <div class="text-muted" style="font-size:13px">Loading…</div>
+<div class="page-head">
+  <div>
+    <small>Administration</small>
+    <h1>Users</h1>
+    <p class="muted">Staff accounts. Admins approve content and manage settings; staff create and run tests.</p>
+  </div>
+  <button class="primary" id="btnAddUser" type="button">Add user</button>
 </div>
 
-<!-- Modal: add / edit user -->
-<div class="modal fade" id="mUser" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="mUserTitle"><i class="bi bi-person-plus me-2"></i>Add user</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="uId">
-        <div class="row g-3">
-          <div class="col-6">
-            <label class="form-label">Full name *</label>
-            <input class="form-control" id="uFullName" maxlength="255">
-          </div>
-          <div class="col-6">
-            <label class="form-label">Username *</label>
-            <input class="form-control" id="uUsername" maxlength="100" autocomplete="off">
-          </div>
-          <div class="col-6">
-            <label class="form-label">Email</label>
-            <input type="email" class="form-control" id="uEmail" maxlength="255">
-          </div>
-          <div class="col-6">
-            <label class="form-label">Password <span class="text-muted fw-normal" id="uPassHint"></span></label>
-            <input type="password" class="form-control" id="uPassword" autocomplete="new-password">
-          </div>
-          <div class="col-12">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="uIsAdmin">
-              <label class="form-check-label" for="uIsAdmin" style="font-size:13px">Administrator (full access)</label>
-            </div>
-          </div>
-          <div class="col-6" id="uCmWrap">
-            <label class="form-label">Content manager record</label>
-            <select class="form-select" id="uCmPerson"><option value="">— none —</option></select>
-            <div class="form-text">Grants CM access to that person's companies.</div>
-          </div>
-          <div class="col-6" id="uSpWrap">
-            <label class="form-label">Sales person record</label>
-            <select class="form-select" id="uSpPerson"><option value="">— none —</option></select>
-            <div class="form-text">Grants SP access to that person's companies.</div>
-          </div>
-          <div class="col-12">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="uActive" checked>
-              <label class="form-check-label" for="uActive" style="font-size:13px">Account active</label>
-            </div>
-          </div>
+<div class="panel">
+  <div class="scroll" id="usersList"><span class="muted">Loading…</span></div>
+</div>
+
+<div class="mh-overlay" id="mUser">
+  <div class="mh-modal">
+    <div class="mh-modal-head"><span id="mUserTitle">Add user</span><button type="button" data-close>✕</button></div>
+    <div class="mh-modal-body">
+      <input type="hidden" id="uId">
+      <div class="form-grid">
+        <div>
+          <label>Full name *</label>
+          <input id="uFullName" type="text" style="width:100%" maxlength="255">
+        </div>
+        <div>
+          <label>Username *</label>
+          <input id="uUsername" type="text" style="width:100%" maxlength="100" autocomplete="off">
+        </div>
+        <div>
+          <label>Email</label>
+          <input id="uEmail" type="email" style="width:100%" maxlength="255">
+        </div>
+        <div>
+          <label>Password <span class="muted" id="uPassHint"></span></label>
+          <input id="uPassword" type="password" style="width:100%" autocomplete="new-password">
+        </div>
+        <div>
+          <label>Role</label>
+          <select id="uRole" style="width:100%">
+            <option value="staff">Staff</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div>
+          <label style="margin-top:34px"><input type="checkbox" id="uActive" checked style="width:auto;margin-right:7px">Account active</label>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-sm btn-mh" id="btnSaveUser">Save user</button>
-      </div>
+    </div>
+    <div class="mh-modal-footer">
+      <button type="button" data-close>Cancel</button>
+      <button type="button" class="primary" id="btnSaveUser">Save user</button>
     </div>
   </div>
 </div>

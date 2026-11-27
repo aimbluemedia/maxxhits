@@ -29,14 +29,10 @@ function json_error(string $msg, int $code = 400): void {
     exit;
 }
 
-// ── Secret encryption (social logins, channel credentials) ──
-// Key comes from APP_KEY in the db config file (generated at
-// setup time). Falls back to a DB_NAME derivation for configs
-// created before APP_KEY existed.
+// ── Secret encryption (destination credentials, API keys) ──
 
 function enc_key(): string {
     if (defined('APP_KEY')) return hash('sha256', APP_KEY, true);
-    if (defined('DB_NAME')) return hash('sha256', DB_NAME . 'mh_secret_key', true);
     return str_repeat("\0", 32);
 }
 
@@ -56,7 +52,7 @@ function decrypt_secret(?string $stored): string {
     return openssl_decrypt($enc, 'AES-256-CBC', enc_key(), OPENSSL_RAW_DATA, $iv) ?: '';
 }
 
-// ── App settings (settings table) ──────────────────────────
+// ── Settings ───────────────────────────────────────────────
 
 function get_setting(string $key, ?string $default = null): ?string {
     $pdo = db_connect();
@@ -77,7 +73,25 @@ function set_setting(string $key, ?string $value): void {
     $stmt->execute([$key, $value]);
 }
 
-// ── Validation helpers ─────────────────────────────────────
+/** Emergency stop blocks every outbound/publishing action. */
+function emergency_stopped(): bool {
+    return get_setting('emergency_stop', '0') === '1';
+}
+
+// ── Audit log ──────────────────────────────────────────────
+
+function audit(string $action, string $targetType = '', string $targetId = '', string $message = ''): void {
+    $pdo = db_connect();
+    if (!$pdo) return;
+    $actor = $_SESSION['mh_user']['username'] ?? 'system';
+    $stmt = $pdo->prepare('
+        INSERT INTO audit_events (actor, action, target_type, target_id, message)
+        VALUES (?,?,?,?,?)
+    ');
+    $stmt->execute([$actor, $action, $targetType, $targetId, $message]);
+}
+
+// ── Validation ─────────────────────────────────────────────
 
 function valid_date(?string $d): bool {
     if (!$d) return false;

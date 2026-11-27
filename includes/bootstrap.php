@@ -1,13 +1,15 @@
 <?php
 // ============================================================
-//  includes/bootstrap.php — App bootstrap
+//  includes/bootstrap.php — MaxxHits Marketing OS bootstrap
 //  Every page and API endpoint starts here.
-//  Loads: config, DB, helpers, auth, CSRF.
 // ============================================================
 
-define('MAXXHITS_VERSION', '1.0.0');
+define('MH_VERSION', '2.0.0');
 define('APP_NAME', 'MaxxHits');
 define('APP_ROOT', dirname(__DIR__));
+
+// All scheduling displays and cron math use Arizona time.
+date_default_timezone_set('America/Phoenix');
 
 // ── Session ────────────────────────────────────────────────
 if (session_status() === PHP_SESSION_NONE) {
@@ -23,17 +25,12 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // ── DB config ──────────────────────────────────────────────
-// Preferred location is ONE LEVEL ABOVE the webroot (not web
-// accessible). Falls back to app root for hosts where the
-// parent directory is not writable.
-$__cfg_candidates = [
-    dirname(APP_ROOT) . '/maxxhits.db.config.php',
-    APP_ROOT . '/db.config.php',
-];
-foreach ($__cfg_candidates as $__cfg) {
+// Preferred location is ONE LEVEL ABOVE the webroot; falls back
+// to the app root (both gitignored, both blocked by .htaccess).
+foreach ([dirname(APP_ROOT) . '/maxxhits.db.config.php', APP_ROOT . '/db.config.php'] as $__cfg) {
     if (is_file($__cfg)) { require_once $__cfg; break; }
 }
-unset($__cfg_candidates, $__cfg);
+unset($__cfg);
 
 function db_connect(): ?PDO {
     static $pdo = null;
@@ -66,3 +63,4 @@ function db_connected(): bool {
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/csrf.php';
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/modules.php';

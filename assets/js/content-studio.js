@@ -1,88 +1,37 @@
 /* ============================================================
-   content-studio.js — AI Content Studio page
+   content-studio.js — Content studio page
    ============================================================ */
 (function () {
   'use strict';
 
-  const page = document.getElementById('studioPage');
-  if (!page) return;
-  const IS_ADMIN = page.dataset.isAdmin === '1';
-
-  let companies = [];
-  let variants = []; // {title, content, saved, postId}
-
-  // ── Init ──────────────────────────────────────────────────
+  let brands = [];
+  let variants = [];
 
   async function load() {
-    try {
-      companies = await MH.api('companies');
-    } catch (e) {
-      MH.toast(e.message, 'err');
-      return;
-    }
-    const sel = document.getElementById('stCompany');
-    sel.innerHTML = companies.map(function (c) {
-      return '<option value="' + MH.esc(c.id) + '">' + MH.esc(c.name) + '</option>';
-    }).join('') || '<option value="">— no companies yet —</option>';
-
-    if (IS_ADMIN) loadAISettings();
+    try { brands = (await MH.api('brands')).filter(function (b) { return b.is_active; }); }
+    catch (e) { MH.toast(e.message, 'err'); return; }
+    document.getElementById('stBrand').innerHTML = brands.map(function (b) {
+      return '<option value="' + MH.esc(b.id) + '">' + MH.esc(b.name) + '</option>';
+    }).join('') || '<option value="">— no brands yet —</option>';
   }
-
-  // ── AI settings (admin) ───────────────────────────────────
-
-  async function loadAISettings() {
-    try {
-      const s = await MH.api('ai', { action: 'settings' });
-      document.getElementById('aiProvider').value = s.provider;
-      document.getElementById('aiModel').value = s.model;
-      document.getElementById('keyAnthHint').textContent = s.has_key_anthropic ? '(saved — blank keeps it)' : '(not set)';
-      document.getElementById('keyXaiHint').textContent = s.has_key_xai ? '(saved — blank keeps it)' : '(not set)';
-      const ready = (s.provider === 'anthropic' && s.has_key_anthropic) || (s.provider === 'xai' && s.has_key_xai);
-      document.getElementById('aiStatusLine').innerHTML = ready
-        ? '<i class="bi bi-check-circle" style="color:#16a34a"></i> Using <strong>' + MH.esc(s.model) + '</strong> via ' + (s.provider === 'anthropic' ? 'Claude' : 'Grok') + '.'
-        : '<i class="bi bi-exclamation-triangle" style="color:#d97706"></i> No API key saved for the selected provider — generation will fail until one is added.';
-    } catch (e) {
-      document.getElementById('aiStatusLine').textContent = 'Could not load AI settings: ' + e.message;
-    }
-  }
-
-  async function saveAISettings() {
-    try {
-      await MH.api('ai', {
-        action: 'save_settings',
-        provider: document.getElementById('aiProvider').value,
-        model: document.getElementById('aiModel').value.trim(),
-        key_anthropic: document.getElementById('aiKeyAnthropic').value,
-        key_xai: document.getElementById('aiKeyXai').value
-      }, 'POST');
-      document.getElementById('aiKeyAnthropic').value = '';
-      document.getElementById('aiKeyXai').value = '';
-      MH.toast('AI settings saved.', 'ok');
-      loadAISettings();
-    } catch (e) {
-      MH.toast(e.message, 'err');
-    }
-  }
-
-  // ── Generation ────────────────────────────────────────────
 
   async function generate() {
     const btn = document.getElementById('btnGenerate');
     const payload = {
       action: 'generate',
-      company_id: document.getElementById('stCompany').value,
+      brand_id: document.getElementById('stBrand').value,
       platform: document.getElementById('stPlatform').value,
       topic: document.getElementById('stTopic').value.trim(),
       instructions: document.getElementById('stInstructions').value.trim(),
       count: document.getElementById('stCount').value
     };
-    if (!payload.company_id) { MH.toast('Pick a company first.', 'err'); return; }
+    if (!payload.brand_id) { MH.toast('Pick a brand first.', 'err'); return; }
     if (!payload.topic) { MH.toast('Topic is required.', 'err'); return; }
 
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generating…';
+    btn.textContent = 'Generating…';
     document.getElementById('variantsArea').innerHTML =
-      '<div class="state-box"><span class="spinner-border spinner-border-sm"></span><strong class="mt-2">Writing drafts…</strong><p>This can take up to a minute.</p></div>';
+      '<div class="state-box"><strong>Writing drafts…</strong><p>This can take up to a minute.</p></div>';
     try {
       const r = await MH.api('ai', payload, 'POST');
       variants = r.variants.map(function (v) { return { title: v.title, content: v.content, saved: false, postId: null }; });
@@ -90,37 +39,34 @@
     } catch (e) {
       MH.toast(e.message, 'err');
       document.getElementById('variantsArea').innerHTML =
-        '<div class="state-box"><i class="bi bi-x-circle" style="color:#dc2626"></i><strong>Generation failed</strong><p>' + MH.esc(e.message) + '</p></div>';
+        '<div class="state-box"><strong>Generation failed</strong><p>' + MH.esc(e.message) + '</p></div>';
     }
     btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-stars me-1"></i>Generate drafts';
+    btn.textContent = 'Generate drafts';
   }
 
   function renderVariants(model) {
     const area = document.getElementById('variantsArea');
     area.innerHTML =
-      (model ? '<div class="text-muted mb-2" style="font-size:12px"><i class="bi bi-stars me-1" style="color:#a855f7"></i>Generated by ' + MH.esc(model) + ' — edit freely before saving.</div>' : '') +
+      (model ? '<p class="muted" style="margin-top:0">Generated by <strong>' + MH.esc(model) + '</strong> — edit freely before saving.</p>' : '') +
       variants.map(function (v, i) {
-        return '<div class="mh-card" data-variant="' + i + '">' +
-          '<h3><i class="bi bi-file-earmark-text"></i>Variant ' + (i + 1) +
-          (v.saved ? '<span class="badge-status st-review ms-2">Sent to review</span>' : '') +
-          '</h3>' +
-          '<label class="form-label">Working title</label>' +
-          '<input class="form-control mb-2" data-vtitle="' + i + '" value="' + MH.esc(v.title) + '"' + (v.saved ? ' disabled' : '') + '>' +
-          '<label class="form-label">Content</label>' +
-          '<textarea class="form-control mb-2" data-vcontent="' + i + '" rows="7"' + (v.saved ? ' disabled' : '') + '>' + MH.esc(v.content) + '</textarea>' +
-          '<div class="row g-2 mb-2">' +
-            '<div class="col-md-4"><label class="form-label">Post date</label><input type="date" class="form-control" data-vdate="' + i + '"' + (v.saved ? ' disabled' : '') + '></div>' +
-            '<div class="col-md-3"><label class="form-label">Time</label><input type="time" class="form-control" data-vtime="' + i + '"' + (v.saved ? ' disabled' : '') + '></div>' +
-            '<div class="col-md-5"><label class="form-label">Image URL</label><input class="form-control" data-vimage="' + i + '" placeholder="https://…"' + (v.saved ? ' disabled' : '') + '></div>' +
+        return '<div class="panel">' +
+          '<h2>Variant ' + (i + 1) + (v.saved ? ' <span class="st st-review">Sent to review</span>' : '') + '</h2>' +
+          '<label>Working title</label>' +
+          '<input type="text" style="width:100%" data-vtitle="' + i + '" value="' + MH.esc(v.title) + '"' + (v.saved ? ' disabled' : '') + '>' +
+          '<label>Content</label>' +
+          '<textarea data-vcontent="' + i + '" rows="7"' + (v.saved ? ' disabled' : '') + '>' + MH.esc(v.content) + '</textarea>' +
+          '<div class="row" style="margin-top:8px">' +
+            '<div><label style="margin-top:0">Post date</label><input type="date" data-vdate="' + i + '"' + (v.saved ? ' disabled' : '') + '></div>' +
+            '<div><label style="margin-top:0">Time (AZ)</label><input type="time" data-vtime="' + i + '"' + (v.saved ? ' disabled' : '') + '></div>' +
+            '<div style="flex:1"><label style="margin-top:0">Image URL</label><input type="text" style="width:100%" data-vimage="' + i + '" placeholder="https://…"' + (v.saved ? ' disabled' : '') + '></div>' +
           '</div>' +
+          '<div class="row" style="margin-top:14px">' +
           (v.saved
-            ? '<a class="btn btn-sm btn-outline-secondary" href="approvals.php">Open Approval Center</a>'
-            : '<div class="d-flex gap-2">' +
-              '<button class="btn btn-sm btn-mh" data-send="' + i + '"><i class="bi bi-clipboard-check me-1"></i>Submit for review</button>' +
-              '<button class="btn btn-sm btn-outline-secondary" data-savedraft="' + i + '">Save as draft</button>' +
-              '</div>') +
-          '</div>';
+            ? '<a href="approvals.php"><button type="button">Open Approval center</button></a>'
+            : '<button class="primary" data-send="' + i + '">Submit for review</button>' +
+              '<button data-savedraft="' + i + '">Save as draft</button>') +
+          '</div></div>';
       }).join('');
 
     area.querySelectorAll('[data-send]').forEach(function (b) {
@@ -140,11 +86,12 @@
       const r = await MH.api('posts', {
         action: 'save',
         id: v.postId,
-        company_id: document.getElementById('stCompany').value,
+        brand_id: document.getElementById('stBrand').value,
         platform: document.getElementById('stPlatform').value,
         title: title,
         content: content,
         status: status,
+        source: 'studio',
         post_date: document.querySelector('[data-vdate="' + i + '"]').value || null,
         publish_time: document.querySelector('[data-vtime="' + i + '"]').value || null,
         image_url: document.querySelector('[data-vimage="' + i + '"]').value.trim(),
@@ -153,22 +100,13 @@
       }, 'POST');
       v.postId = r.id;
       v.saved = status === 'review';
-      MH.toast(status === 'review' ? 'Sent to the Approval Center.' : 'Saved as draft on the company board.', 'ok');
+      MH.toast(status === 'review' ? 'Sent to the Approval center.' : 'Saved as draft.');
       renderVariants();
-    } catch (e) {
-      MH.toast(e.message, 'err');
-    }
+    } catch (e) { MH.toast(e.message, 'err'); }
   }
 
   document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('btnGenerate').addEventListener('click', generate);
-    if (IS_ADMIN) {
-      document.getElementById('btnToggleAI').addEventListener('click', function () {
-        const box = document.getElementById('aiSettingsBox');
-        box.style.display = box.style.display === 'none' ? '' : 'none';
-      });
-      document.getElementById('btnSaveAI').addEventListener('click', saveAISettings);
-    }
     load();
   });
 })();
