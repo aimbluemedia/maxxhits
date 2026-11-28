@@ -16,6 +16,22 @@ DROP TABLE IF EXISTS brands;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS settings;
 
+-- Legacy tables from the v1 content-board app (safe to run on a
+-- fresh database — these only exist on pre-2.0 installs).
+DROP TABLE IF EXISTS automation_logs;
+DROP TABLE IF EXISTS channels;
+DROP TABLE IF EXISTS social_login_companies;
+DROP TABLE IF EXISTS social_logins;
+DROP TABLE IF EXISTS revenue_snapshots;
+DROP TABLE IF EXISTS person_companies;
+DROP TABLE IF EXISTS companies;
+DROP TABLE IF EXISTS people;
+DROP VIEW  IF EXISTS v_company_summary;
+DROP VIEW  IF EXISTS v_platform_monthly;
+DROP VIEW  IF EXISTS v_team_earnings;
+DROP VIEW  IF EXISTS v_posting_today;
+DROP VIEW  IF EXISTS v_revenue_totals;
+
 -- ── Brands: isolated client workspaces ──────────────────────
 CREATE TABLE brands (
   id          VARCHAR(36)  NOT NULL,
