@@ -1,36 +1,30 @@
 <?php
 // ============================================================
-//  includes/layout/footer.php — Shared page shell (bottom half)
-//  Loads Bootstrap JS, core.js and the page's own scripts.
+//  includes/layout/footer.php — Shared shell (bottom half)
 // ============================================================
 ?>
-    </div><!-- /.content -->
-  </div><!-- /.main -->
-</div><!-- /.app -->
+  </div><!-- /#content -->
+</main>
 
-<!-- Toast container (populated by MH.toast in core.js) -->
-<div class="toast-stack" id="toastStack"></div>
+<div id="toast" role="status"></div>
 
-<!-- Shared confirm modal (used by MH.confirm in core.js) -->
-<div class="modal fade" id="mhConfirm" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-sm">
-    <div class="modal-content">
-      <div class="modal-body pt-4 text-center">
-        <i class="bi bi-exclamation-triangle" style="font-size:28px;color:#dc2626"></i>
-        <div class="mt-2" id="mhConfirmMsg" style="font-size:14px">Are you sure?</div>
-      </div>
-      <div class="modal-footer border-0 justify-content-center pb-4">
-        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-sm btn-danger" id="mhConfirmYes">Delete</button>
-      </div>
+<!-- Shared confirm dialog (MH.confirm) -->
+<div class="mh-overlay" id="confirmOverlay">
+  <div class="mh-modal small">
+    <div class="mh-modal-body center">
+      <div class="confirm-icon">!</div>
+      <div id="confirmMsg">Are you sure?</div>
+    </div>
+    <div class="mh-modal-footer center">
+      <button type="button" id="confirmNo">Cancel</button>
+      <button type="button" class="danger" id="confirmYes">Confirm</button>
     </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/core.js?v=<?= e(MAXXHITS_VERSION) ?>"></script>
+<script src="assets/js/core.js?v=<?= e(MH_VERSION) ?>"></script>
 <?php foreach (($PAGE['js'] ?? []) as $mh_js): ?>
-<script src="assets/js/<?= e($mh_js) ?>?v=<?= e(MAXXHITS_VERSION) ?>"></script>
+<script src="assets/js/<?= e($mh_js) ?>?v=<?= e(MH_VERSION) ?>"></script>
 <?php endforeach; ?>
 </body>
 </html>

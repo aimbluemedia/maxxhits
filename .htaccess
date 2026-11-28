@@ -1,16 +1,13 @@
 # ============================================================
-#  MaxxHits — Apache hardening (Hostinger/cPanel compatible)
+#  MaxxHits 2.0 — Apache hardening (Hostinger/cPanel compatible)
 # ============================================================
 
-# Never serve the DB config or SQL files
 <FilesMatch "\.(sql|config\.php)$">
   Require all denied
 </FilesMatch>
 
-# Disable directory listings
 Options -Indexes
 
-# Basic security headers
 <IfModule mod_headers.c>
   Header set X-Content-Type-Options "nosniff"
   Header set X-Frame-Options "SAMEORIGIN"

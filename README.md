@@ -1,57 +1,55 @@
-# MaxxHits
+# MaxxHits 2.0
 
-Multi-company content tracking and **automated posting** platform by AimBlue Media.
-Plain PHP 8 + MySQL + vanilla JS — no frameworks, no build step, runs on shared hosting (Hostinger/cPanel).
+AimBlue Media's internal **marketing operating system**: multi-brand workspaces, AI content
+generation, mandatory human approval, recurring automations, and auto-publishing to WordPress
+and social platforms. Plain PHP 8 + MySQL + vanilla JS — no frameworks, no build step, runs on
+shared hosting (Hostinger/cPanel). Dark internal-OS interface.
 
-## What it does
+## The platform
 
-- **Dashboard** — monthly revenue, companies posting today, per-company progress, team earnings
-- **Companies** — client companies with fees, fee splits, posting targets and posting days
-- **Company board** — per-company post calendar with month filter, platform filter and post editor
-- **Automation** — connect WordPress + social accounts as *channels* and auto-publish scheduled posts:
-  - WordPress (REST API + application passwords, incl. featured-image sideload)
-  - Facebook Pages (Graph API)
-  - Instagram Business (Graph API, image posts)
-  - X / Twitter (API v2)
-  - LinkedIn (pages or profiles)
-- **Social logins** — AES-encrypted credentials vault, shared per company
-- **Content managers / Sales people** — team records linked to companies
-- **Users** — login accounts with dual roles (admin / CM / SP), company-scoped visibility
+Nine navigation groups — **Command · Intelligence · Creative · Automation · Publishing ·
+Engagement · Outreach · Growth · Administration** — with a fully working core today and
+structured placeholder workspaces (each carrying its build specification) for the rest:
 
-## Architecture
-
-Every navigation item is its **own page** (`dashboard.php`, `companies.php`, `company.php`,
-`automation.php`, …) with its **own JS file** — editing one page cannot break the others.
-Shared code lives in `includes/` (auth, helpers, layout) and `assets/js/core.js`.
-All data flows through JSON endpoints in `api/`, protected by sessions + CSRF tokens.
+**Working now**
+- **Overview** — pipeline tiles, per-brand status, failed-post exceptions, recent automation runs
+- **Brands** — the brand directory feeding the workspace selector (seeded with the AimBlue brands)
+- **Content studio** — AI draft variants per brand + platform in the brand's voice (Claude by
+  default, Grok selectable), edited and submitted for review
+- **Approval center** — admins approve, approve-and-queue, or reject with a note; nothing
+  publishes without a human decision, and edits to approved posts return them to review
+- **Automation** (10 platform workspaces: LinkedIn, Reddit, Pinterest, Blog, Facebook,
+  Instagram, YouTube, TikTok, X, Threads) — recurring AI research → drafts into the Approval
+  center on a brand-specific Arizona-time schedule; saved paused, test runs never publish,
+  duplicate occurrences impossible
+- **Publishing queue** — approved+scheduled posts auto-publish via the cron scheduler through
+  official APIs (WordPress, Facebook Pages, Instagram Business, X, LinkedIn); other platforms
+  are manual handoff
+- **Connected accounts** — per-brand destinations with AES-encrypted credentials + connection tests
+- **Settings** — AI provider/model/keys, scheduler cron URL, emergency-stop state
+- **Audit log** — append-only history of every decision, publish and run
+- **Emergency stop** — one header button pauses ALL publishing and automations, enforced server-side
 
 ## Install
 
-> **Automatic deployment:** pushes to `main` auto-upload to Hostinger via
-> GitHub Actions — see [DEPLOYMENT.md](DEPLOYMENT.md) for the one-time setup.
+> Pushes to `main` auto-deploy to Hostinger via GitHub Actions — see [DEPLOYMENT.md](DEPLOYMENT.md).
 
-1. Upload everything to your webroot (or a subfolder) — or let the deploy workflow do it
-2. Open `config.php` in the browser → enter MySQL credentials
+1. Upload/deploy to the webroot
+2. Open `config.php` → enter MySQL credentials
 3. Import `sql/maxxhits-schema.sql` in phpMyAdmin
-4. Open `setadmin.php` → set the admin password → **delete this file from the server**
-5. Sign in at `login.php` (username `admin`)
+4. Open `setadmin.php` → set the admin password → **delete the file from the server**
+5. Sign in (username `admin`) → Settings → add your Claude API key
+6. Copy the cron URL from Settings into hPanel → Advanced → Cron Jobs (every 5–15 minutes)
 
-## Automated posting setup
+## Daily flow
 
-1. **Automation page** → *Add channel* → pick the company + platform and paste credentials
-   (each platform's fields are explained inline)
-2. Use the plug button to **test** the connection
-3. On a company board, create a post, set *Publishing* to **Auto-publish via channel**,
-   pick the channel, date and time
-4. Add the **cron URL** (shown on the Automation page, admin only) to
-   Hostinger → Advanced → Cron Jobs, every 5–15 minutes — or run
-   `php cron/publish-scheduler.php` from a CLI cron
-5. Watch the queue and activity log on the Automation page; use **Run now** to trigger
-   a run manually, or the send button on a post to publish it immediately
+Brief the **Content studio** (or let an **Automation** run on schedule) → drafts land in the
+**Approval center** → an admin approves & queues → the scheduler publishes at the set date/time
+→ results, links and failures appear in the **Publishing queue** and **Audit log**.
 
 ## Security notes
 
-- DB config (with the encryption key) is written above the webroot when possible and gitignored
-- Channel credentials and vault passwords are AES-256-CBC encrypted at rest
-- All API mutations require a CSRF token; company visibility is enforced server-side
-- `.htaccess` files block direct access to `includes/`, `lib/`, `sql/` and config/SQL files
+- DB config + encryption key written above the webroot when possible; gitignored and .htaccess-blocked
+- Destination credentials and AI keys are AES-256-CBC encrypted at rest
+- CSRF on every mutation, roles enforced server-side, approval gates and the emergency stop
+  enforced in the scheduler itself — not just the UI
